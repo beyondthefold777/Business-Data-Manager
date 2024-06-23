@@ -1,30 +1,30 @@
 const { Pool } = require('pg');
-require('dotenv').config(); //loading environment variables
+require('dotenv').config();
 const CFonts = require('cfonts');
 const inquirer = require("inquirer");
-// Creating a new database connection pool using the provided connection string
+
 const pool = new Pool({
   connectionString: process.env.DB_CONNECTION_STRING,
 });
-// Connecting to the database and starting the application
+
 pool.connect()
   .then(() => {
     console.log('Connected to the database');
-    startApp();
+    createDatabase();
   })
   .catch((err) => console.error('Error connecting to database', err));
-//checking connection status by querying the database
-const createDbQuery = 'CREATE DATABASE IF NOT EXISTS BusinessDataManager_db';
-pool.query(createDbQuery)
-  .then(() => {
+
+const createDatabase = async () => {
+  try {
+    const createDbQuery = 'CREATE DATABASE IF NOT EXISTS BusinessDataManager_db';
+    await pool.query(createDbQuery);
     console.log('Database created or already exists');
-    return pool.query('USE BusinessDataManager_db');
-  })
-  .then(() => {
-    console.log('Connected to the database');
     startApp();
-  })
-  .catch((err) => console.error('Error connecting to database', err));
+  } catch (err) {
+    console.error('Error creating database:', err);
+  }
+};
+
 
 CFonts.say('Business Data Manager', {
   font: 'block',

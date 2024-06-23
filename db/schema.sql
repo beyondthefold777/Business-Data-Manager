@@ -1,13 +1,16 @@
-DROP DATABASE IF EXISTS BusinessDataManager_db;
+-- Create the BusinessDataManager_db database
 CREATE DATABASE BusinessDataManager_db;
 
+-- Connect to the newly created database
 \c BusinessDataManager_db;
 
+-- Create the department table
 CREATE TABLE department (
   id SERIAL PRIMARY KEY,
   department_name VARCHAR(30) NOT NULL
 );
 
+-- Create the role table
 CREATE TABLE role (
     id SERIAL PRIMARY KEY,
     title VARCHAR(30),
@@ -18,6 +21,7 @@ CREATE TABLE role (
     ON DELETE SET NULL
 );
 
+-- Create the employee table
 CREATE TABLE employee (
     id SERIAL PRIMARY KEY,
     first_name VARCHAR(30),
