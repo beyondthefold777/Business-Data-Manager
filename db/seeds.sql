@@ -1,16 +1,16 @@
-INSERT INTO department (department_name)
+INSERT INTO department (name)
 VALUES ('Marketing'),
        ('HR Department'),
        ('Business Development'),
        ('IT Department'),
-       ('UX/UI Department'),
+       ('UX UI Department'),
        ('Accounting'),
        ('Board of Directors');
 
 INSERT INTO role (title, salary, department_id)
 VALUES ('Full Stack Developer', 115000, 4),
        ('Project Manager', 120000, 4),
-       ('UX/UI Specialist', 100000, 5),
+       ('UX UI Specialist', 100000, 5),
        ('Accountant', 100000, 6),
        ('CEO', 200000, 3),
        ('Software Marketing Manager', 100000, 1);
