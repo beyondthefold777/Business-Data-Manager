@@ -2,11 +2,12 @@ const { Pool } = require('pg');
 require('dotenv').config();
 
 const pool = new Pool({
-  user: 'postgres',
-  password: 'Holdtrue2vision777',
-  host: 'localhost',
-  database: 'employeedata_db',
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  host: process.env.DB_HOST,
+  database: process.env.DB_NAME,
 });
+
 
 const insertData = async () => {
   try {
