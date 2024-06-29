@@ -4,6 +4,7 @@ require('dotenv').config();
 const CFonts = require('cfonts');
 const inquirer = require("inquirer");
 
+// Initialize a connection pool to the PostgreSQL database using environment variables
 const pool = new Pool({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
@@ -12,22 +13,34 @@ const pool = new Pool({
 });
 
 const startApp = async () => {
+  let client;
   try {
-    await new Promise((resolve, reject) => {
-      exec('node insertData.js', (error, stdout, stderr) => {
-        if (error) {
-          console.error(`Error executing insertData.js: ${stderr}`);
-          reject(error);
-        } else {
-          console.log(stdout);
-          resolve();
-        }
-      });
-    });
+    client = await pool.connect();
 
-    await pool.connect();
+    // Check if the database is empty and insert initial data if necessary
+    const departmentCount = await client.query('SELECT COUNT(*) FROM department');
+    const roleCount = await client.query('SELECT COUNT(*) FROM role');
+    const employeeCount = await client.query('SELECT COUNT(*) FROM employee');
+
+    if (departmentCount.rows[0].count === '0' && roleCount.rows[0].count === '0' && employeeCount.rows[0].count === '0') {
+      await new Promise((resolve, reject) => {
+        exec('node insertData.js', (error, stdout, stderr) => {
+          if (error) {
+            console.error(`Error executing insertData.js: ${stderr}`);
+            reject(error);
+          } else {
+            console.log(stdout);
+            resolve();
+          }
+        });
+      });
+    } else {
+      console.log('Data already exists. Skipping data insertion.');
+    }
+
     console.log('Connected to the employeedata_db database.');
 
+    // Display a welcome message using CFonts
     CFonts.say('Business Data Manager', {
       font: 'block',
       align: 'center',
@@ -39,11 +52,16 @@ const startApp = async () => {
       maxLength: 0,
     });
 
+    // Display the main menu to the user
     await mainMenu();
   } catch (err) {
     console.error('An error occurred:', err);
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
-}; // Added closing brace here
+};
 
 const mainMenu = async () => {
   try {
@@ -58,10 +76,12 @@ const mainMenu = async () => {
         'Add a department',
         'Add a role',
         'Add an employee',
-        'Update an employee role'
+        'Update an employee role',
+        'Exit'
       ]
     });
 
+    // Handle user's choice from the main menu
     switch (response.action) {
       case 'View all departments':
         await viewAllDepartments();
@@ -84,11 +104,30 @@ const mainMenu = async () => {
       case 'Update an employee role':
         await updateEmployeeRole();
         break;
+      case 'Exit':
+        console.log('Exiting the application.');
+        process.exit(0);
       default:
         console.log('Invalid action');
     }
   } catch (err) {
     console.error('An error occurred:', err);
+  }
+};
+
+const returnToMainMenu = async () => {
+  const { returnToMenu } = await inquirer.prompt({
+    type: 'list',
+    name: 'returnToMenu',
+    message: 'What would you like to do next?',
+    choices: ['Return to Main Menu', 'Exit']
+  });
+
+  if (returnToMenu === 'Return to Main Menu') {
+    await mainMenu();
+  } else {
+    console.log('Exiting the application.');
+    process.exit(0);
   }
 };
 
@@ -104,6 +143,8 @@ async function viewAllDepartments() {
     }
   } catch (err) {
     console.error('Error fetching departments:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -119,6 +160,8 @@ async function viewAllRoles() {
     }
   } catch (err) {
     console.error('Error fetching roles:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -134,6 +177,8 @@ async function viewAllEmployees() {
     }
   } catch (err) {
     console.error('Error fetching employees:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -151,6 +196,8 @@ async function addDepartment() {
     console.table(rows);
   } catch (err) {
     console.error('Error adding department:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -180,6 +227,8 @@ async function addRole() {
     console.table(rows);
   } catch (err) {
     console.error('Error adding role:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -214,6 +263,8 @@ async function addEmployee() {
     console.table(rows);
   } catch (err) {
     console.error('Error adding employee:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
@@ -256,7 +307,10 @@ async function updateEmployeeRole() {
     }
   } catch (err) {
     console.error('Error updating employee role:', err);
+  } finally {
+    await returnToMainMenu();
   }
 }
 
+// Start the application
 startApp();
